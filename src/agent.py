@@ -1,4 +1,4 @@
-"""Shopping agent built with LangChain, using gpt-oss-120b on GroqCloud."""
+"""Shopping agent built with LangChain, using openai/gpt-oss-20b on GroqCloud."""
 
 import os
 
@@ -11,7 +11,7 @@ from src.tools import TOOLS
 
 load_dotenv()
 
-MODEL_NAME = "openai/gpt-oss-120b"
+MODEL_NAME = "openai/gpt-oss-20b"
 
 SYSTEM_PROMPT = """You are a friendly shopping assistant for an online grocery store.
 
