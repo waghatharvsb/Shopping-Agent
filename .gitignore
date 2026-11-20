@@ -2,3 +2,8 @@
 __pycache__/
 .env
 resources/store.db
+.env
+.venv/
+__pycache__/
+*.pyc
+resources/store.db

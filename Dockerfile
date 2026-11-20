@@ -11,11 +11,10 @@ ENV UV_LINK_MODE=copy \
 COPY pyproject.toml uv.lock ./
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev
+    uv sync --frozen --no-dev --no-install-project
 
 COPY . .
 
 EXPOSE 8501
 
-CMD ["sh", "-c", "python src/setup_db.py && streamlit run app.py --server.address=0.0.0.0 --server.port=8501 --server.headless=true"]
-
+CMD ["sh", "-c", "python src/setup_db.py && streamlit run app.py --server.address=0.0.0.0 --server.port=${PORT:-8501} --server.headless=true"]
