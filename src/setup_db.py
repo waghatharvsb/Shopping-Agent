@@ -1,14 +1,10 @@
-import sqlite3
-import os
+from src.db import DB_PATH, get_connection
 
-DB_PATH = os.getenv(
-    "DB_PATH", os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "resources", "store.db"))
-)
+
 
 
 def create_database():
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -213,7 +209,6 @@ def create_database():
     )
 
     conn.commit()
-    conn.close()
     print(f"Database created at: {DB_PATH}")
 
 

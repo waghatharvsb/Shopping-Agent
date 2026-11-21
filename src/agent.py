@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain_groq import ChatGroq
 
-from src.setup_db import DB_PATH, create_database
+from src.db import DB_PATH, get_connection, using_turso
+from src.setup_db import create_database
 from src.tools import TOOLS
 
 load_dotenv()
@@ -26,7 +27,14 @@ SYSTEM_PROMPT = """You are a friendly shopping assistant for an online grocery s
 
 
 def ensure_database() -> None:
-    if not os.path.exists(DB_PATH):
+    if using_turso():
+        conn = get_connection()
+        tables = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='products'"
+        ).fetchall()
+        if not tables:
+            create_database()
+    elif not os.path.exists(DB_PATH):
         create_database()
 
 

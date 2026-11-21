@@ -5,6 +5,7 @@ requires-python = ">=3.12"
 dependencies = [
     "langchain>=1.5.0",
     "langchain-groq>=1.2.0",
+    "libsql>=0.1.11",
     "python-dotenv>=1.2.4",
     "streamlit>=1.67.0",
 ]

@@ -1,18 +1,14 @@
 """LangChain tools for the shopping agent: product search and order placement."""
 
-import sqlite3
 from typing import Optional
 
 from langchain_core.tools import tool
 
+from src.db import get_connection, rows_to_dicts
 from src.reviews_api import get_ratings_for_products
-from src.setup_db import DB_PATH
 
-
-def _connect() -> sqlite3.Connection:
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+PRODUCT_COLUMNS = ["id", "name", "category", "price", "description", "is_organic"]
+ORDER_COLUMNS = ["id", "product_id", "product_name", "price", "ordered_at"]
 
 
 @tool
@@ -56,8 +52,8 @@ def search_products(
     if organic_only:
         sql += " AND is_organic = 1"
 
-    with _connect() as conn:
-        products = [dict(r) for r in conn.execute(sql, params).fetchall()]
+    conn = get_connection()
+    products = rows_to_dicts(conn.execute(sql, tuple(params)).fetchall(), PRODUCT_COLUMNS)
 
     ratings = {r["product_id"]: r for r in get_ratings_for_products([p["id"] for p in products])}
     results = []
@@ -77,16 +73,19 @@ def search_products(
 def place_order(product_id: int) -> dict:
     """Place an order for one product by its product id. Only call this when the user
     has clearly asked to buy/order a specific product."""
-    with _connect() as conn:
-        row = conn.execute("SELECT id, name, price FROM products WHERE id = ?", (product_id,)).fetchone()
-        if row is None:
-            return {"success": False, "error": f"No product with id {product_id}"}
-        cur = conn.execute(
-            "INSERT INTO orders (product_id, product_name, price) VALUES (?, ?, ?)",
-            (row["id"], row["name"], row["price"]),
-        )
-        order = conn.execute("SELECT * FROM orders WHERE id = ?", (cur.lastrowid,)).fetchone()
-    return {"success": True, "order": dict(order)}
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT id, name, price FROM products WHERE id = ?", (product_id,)
+    ).fetchone()
+    if row is None:
+        return {"success": False, "error": f"No product with id {product_id}"}
+    rows = conn.execute(
+        "INSERT INTO orders (product_id, product_name, price) VALUES (?, ?, ?) "
+        "RETURNING id, product_id, product_name, price, ordered_at",
+        (row[0], row[1], row[2]),
+    ).fetchall()
+    conn.commit()
+    return {"success": True, "order": dict(zip(ORDER_COLUMNS, rows[0]))}
 
 
 TOOLS = [search_products, place_order]
