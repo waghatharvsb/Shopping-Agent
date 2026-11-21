@@ -7,3 +7,4 @@ resources/store.db
 __pycache__/
 *.pyc
 resources/store.db
+dump.sql
